@@ -1,0 +1,65 @@
+name: Build and Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'set version'
+        required: false
+        type: string
+        default: "v1.0.0"
+  push:
+    tags:
+      - 'v*'  # 匹配 v 开头的标签，如 v1.0.0
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # 获取完整的提交历史
+
+      - name: Get project name
+        id: project_name
+        run: |
+          # 获取 GitHub 项目名（格式：owner/repo）
+          PROJECT_NAME=$(basename "$GITHUB_REPOSITORY")
+          echo "project_name=$PROJECT_NAME" >> $GITHUB_ENV
+          echo "Project name: $PROJECT_NAME"
+
+      - name: Get version
+        id: tag_name
+        run: |
+          if [[ "$GITHUB_EVENT_NAME" == push ]]; then
+          # 处理 Tag 触发的情况
+          VERSION_NAME="${GITHUB_REF#refs/tags/}"
+          echo "Tag 触发: 使用 Tag 名称 $VERSION_NAME"
+          elif [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]]; then
+          # 处理手动触发的情况
+          VERSION_NAME=${{ github.event.inputs.version }}
+          echo "手动触发: 使用版本 $VERSION_NAME"
+          else
+          echo "未知触发类型，无法确定版本号！" >&2
+          exit 1
+          fi
+          echo "version_name=$VERSION_NAME" >> $GITHUB_ENV
+
+      - name: Create archive
+        run: |
+          cd ..
+          tar --exclude='.*' -czvf "${{ env.project_name }}-${{ env.version_name }}.tar.gz"  --exclude='.git'  "${{ env.project_name }}"
+          zip -r "${{ env.project_name }}-${{ env.version_name }}.zip" "${{ env.project_name }}" -x '*/\.*'
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ env.version_name }}
+          name: Release ${{ env.version_name }}
+          files: |
+            ../${{ env.project_name }}-${{ env.version_name }}.tar.gz
+            ../${{ env.project_name }}-${{ env.version_name }}.zip
+          fail_on_unmatched_files: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
