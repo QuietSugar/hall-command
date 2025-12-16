@@ -9,10 +9,13 @@
 
 ```bash
 # 安装
-curl -fsSL https://raw.githubusercontent.com/QuietSugar/hall-command/refs/heads/debug/install.sh | sudo bash
-
+curl -fsSL https://raw.githubusercontent.com/QuietSugar/hall-command/refs/heads/master/install.sh | bash
+# 安装(国内)
+curl -fsSL https://gh-proxy.com/https://raw.githubusercontent.com/QuietSugar/hall-command/refs/heads/master/install.sh | bash
 # 卸载(还未实现)
-curl -fsSL https://raw.githubusercontent.com/QuietSugar/hall-command/refs/heads/debug/install.sh | sudo bash -s -- uninstall
+curl -fsSL https://raw.githubusercontent.com/QuietSugar/hall-command/refs/heads/master/install.sh | bash -s -- uninstall
+
+```
 
 # 备注
 
