@@ -119,19 +119,14 @@ main(){
     download_and_un_tar
   fi
 
-  if [ -d "${HALL_COMMAND_INSTALL_ROOT_PATH}" ]; then
-    local r_path
-    r_path=$(realpath "${HALL_COMMAND_INSTALL_ROOT_PATH}")
-    echo ".${HALL_COMMAND_NAME}已经安装"在"${r_path}"
-  else
-    echo ".${HALL_COMMAND_NAME}开始安装"
-    install_from_git_dir
-  fi
-}
+  rm -rf "${HALL_COMMAND_INSTALL_ROOT_PATH}/command"
 
-if [ "$1" = "update" ]; then
-  rm -rf ${HALL_COMMAND_INSTALL_ROOT_PATH}
-fi
+  local r_path
+  r_path=$(realpath "${HALL_COMMAND_INSTALL_ROOT_PATH}")
+  echo ".${HALL_COMMAND_NAME}开始安装"在"${r_path}"
+  install_from_git_dir
+
+}
 
 main
 
