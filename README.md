@@ -7,13 +7,17 @@
 
 # 安装
 
+- 一键安装
+
 ```bash
-# 安装
 curl -fsSL https://raw.githubusercontent.com/QuietSugar/hall-command/refs/heads/master/install.sh | bash
-# 安装(国内)
+```
+
+
+- 一键安装（cn）
+
+```bash
 curl -fsSL https://gh-proxy.com/https://raw.githubusercontent.com/QuietSugar/hall-command/refs/heads/master/install.sh | bash
-# 卸载(还未实现)
-curl -fsSL https://raw.githubusercontent.com/QuietSugar/hall-command/refs/heads/master/install.sh | bash -s -- uninstall
 
 ```
 
