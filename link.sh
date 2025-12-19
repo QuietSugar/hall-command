@@ -49,5 +49,6 @@ git reset --hard
 git clean -fd
 
 git_pull
+git branch --set-upstream-to=origin/master master
 
 git status
