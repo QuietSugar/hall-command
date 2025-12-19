@@ -19,6 +19,7 @@ fetch(){
         exit 1
     fi
 }
+
 get_latest_release_url(){
     if [ -n "${RELEASE_FILE_URL}" ]; then
         echo ${RELEASE_FILE_URL}
@@ -111,6 +112,10 @@ EOF
   echo 'install done'
 }
 
+try_link(){
+  cd "${HALL_COMMAND_GIT_DIR}"
+  bash link.sh
+}
 
 main(){
   if [ -d "${HALL_COMMAND_GIT_DIR}" ]; then
@@ -125,7 +130,7 @@ main(){
   r_path=$(realpath "${HALL_COMMAND_INSTALL_ROOT_PATH}")
   echo ".${HALL_COMMAND_NAME}开始安装"在"${r_path}"
   install_from_git_dir
-
+  try_link
 }
 
 main
