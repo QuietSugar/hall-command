@@ -57,6 +57,8 @@ download_and_un_tar(){
 
 function install_from_git_dir() {
   mkdir -p ${HALL_COMMAND_INSTALL_ROOT_PATH}
+  r_path=$(realpath "${HALL_COMMAND_INSTALL_ROOT_PATH}")
+  echo ".${HALL_COMMAND_NAME}开始安装"在"${r_path}"
   cp -r ${HALL_COMMAND_GIT_DIR}/command ${HALL_COMMAND_INSTALL_ROOT_PATH}/
   cp ${HALL_COMMAND_GIT_DIR}/example.env ${HALL_COMMAND_INSTALL_ROOT_PATH}/
   cp -r ${HALL_COMMAND_GIT_DIR}/source ${HALL_COMMAND_INSTALL_ROOT_PATH}/
@@ -127,8 +129,6 @@ main(){
   rm -rf "${HALL_COMMAND_INSTALL_ROOT_PATH}/command"
 
   local r_path
-  r_path=$(realpath "${HALL_COMMAND_INSTALL_ROOT_PATH}")
-  echo ".${HALL_COMMAND_NAME}开始安装"在"${r_path}"
   install_from_git_dir
   try_link
 }
