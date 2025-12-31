@@ -57,7 +57,7 @@ function lm_traverse_dir() {
 		  this_repo_status+="[无远程]"
 		fi
     if [ -n "$this_repo_status" ]; then # 输出结果
-			log_error "[ DIRTY ]$this_repo_status [ROOT_PATH]"$this_repo_relative_path
+			log_error "[ DIRTY ]$this_repo_status \${TARGET_CHECK_DIR}"$this_repo_relative_path
 		else
       if [ "$PRINT_CLEAN" = true ]; then
         log_info "[ CLEAN ]"$this_repo_relative_path
