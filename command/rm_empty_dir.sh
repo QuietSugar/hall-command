@@ -21,9 +21,11 @@ fi
 # 一次性操作 find $SOURCE_BASE_ABS_PATH -type d -empty -exec rmdir {} \;
 log_info "删除可能存在的.DS_Store"
 find $SOURCE_BASE_ABS_PATH -name ".DS_Store" -type f -print -delete
-find $SOURCE_BASE_ABS_PATH -type d | sort -r | while read -r dir; do
-    if [ -z "$(ls -A "$dir")" ]; then
-        log_success "删除目录: "$dir
+# 忽略.git目录及其所有子目录
+find "$SOURCE_BASE_ABS_PATH" -type d -path "*/.git/*" -prune -o -type d -print | sort -r | while read -r dir; do
+    # 额外增加一层判断，确保不会处理.git目录本身
+    if [[ "$dir" != */.git && -z "$(ls -A "$dir")" ]]; then
+        log_success "删除目录: $dir"
         rmdir "$dir"
     fi
 done
