@@ -1,3 +1,14 @@
+# 待处理事项
+
+## `tat.sh` 已移除
+
+`command/tat.sh` 依赖 `tmux`，而 tmux 在 macOS、Windows、多数 Linux 上都不是默认安装的。由于当前用户暂时不使用 tmux，已将 `tat.sh` 从仓库中删除。
+
+如果未来需要恢复 tmux 会话管理功能，可以从 git 历史中提取 `command/tat.sh`，或重新实现一个基于 `screen`/`tmux` 的可选插件。
+
+### 原始 `tat.sh` 内容
+
+```sh
 #!/bin/sh
 
 # ====================================================
@@ -34,3 +45,4 @@ create_if_needed_and_attach() {
 }
 
 create_if_needed_and_attach
+```
