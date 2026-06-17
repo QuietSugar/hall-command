@@ -8,7 +8,7 @@ HALL_COMMAND_NAME="hall-command"
 # 允许通过环境变量覆盖安装路径
 THIS_GIT_USER_DIR="${HALL_COMMAND_GIT_USER_DIR:-${HOME}/git-repo/github.com/QuietSugar}"
 HALL_COMMAND_GIT_DIR="${HALL_COMMAND_GIT_DIR:-${THIS_GIT_USER_DIR}/hall-command}"
-HALL_COMMAND_INSTALL_ROOT_PATH="${HALL_COMMAND_INSTALL_ROOT_PATH:-${HOME}/.${HALL_COMMAND_NAME}}"
+HALL_COMMAND_INSTALL_ROOT_PATH="${HOME}/.${HALL_COMMAND_NAME}"
 
 # 跨平台 realpath 兼容实现
 # install.sh 需要自包含，不能依赖 command/lib/tool.sh（网络安装时该文件可能还不存在）
@@ -120,20 +120,40 @@ download_and_un_tar(){
     mv hall-command "${HALL_COMMAND_GIT_DIR}"
 }
 
+copy_config_or_warn() {
+    local src="$1"
+    local dst="$2"
+    if [ -f "$dst" ]; then
+        echo "[WARN] 配置文件已存在，保留不变：$dst" >&2
+    else
+        cp "$src" "$dst"
+        echo "[INFO] 已创建配置文件：$dst"
+    fi
+}
+
 install_from_git_dir() {
+    local is_update=false
+    if [ -d "${HALL_COMMAND_INSTALL_ROOT_PATH}" ]; then
+        is_update=true
+    fi
+
     mkdir -p "${HALL_COMMAND_INSTALL_ROOT_PATH}"
     local r_path
     r_path=$(realpath_compat "${HALL_COMMAND_INSTALL_ROOT_PATH}")
-    echo ".${HALL_COMMAND_NAME} 开始安装在 ${r_path}"
 
+    if [ "$is_update" = true ]; then
+        echo ".${HALL_COMMAND_NAME} 开始更新：${r_path}"
+    else
+        echo ".${HALL_COMMAND_NAME} 开始安装：${r_path}"
+    fi
+
+    # 脚本文件直接覆盖
     cp -r "${HALL_COMMAND_GIT_DIR}/command" "${HALL_COMMAND_INSTALL_ROOT_PATH}/"
-    cp "${HALL_COMMAND_GIT_DIR}/example.env" "${HALL_COMMAND_INSTALL_ROOT_PATH}/"
     cp -r "${HALL_COMMAND_GIT_DIR}/source" "${HALL_COMMAND_INSTALL_ROOT_PATH}/"
 
-    # 自动创建 .env（如果不存在）
-    if [ ! -f "${HALL_COMMAND_INSTALL_ROOT_PATH}/.env" ]; then
-        cp "${HALL_COMMAND_GIT_DIR}/example.env" "${HALL_COMMAND_INSTALL_ROOT_PATH}/.env"
-    fi
+    # 配置文件不覆盖，仅提醒
+    copy_config_or_warn "${HALL_COMMAND_GIT_DIR}/example.env" "${HALL_COMMAND_INSTALL_ROOT_PATH}/example.env"
+    copy_config_or_warn "${HALL_COMMAND_GIT_DIR}/example.env" "${HALL_COMMAND_INSTALL_ROOT_PATH}/.env"
 
     # 只给脚本加执行权限，而不是整个安装目录
     find "${HALL_COMMAND_INSTALL_ROOT_PATH}/command" -type f -name '*.sh' -exec chmod +x {} \;

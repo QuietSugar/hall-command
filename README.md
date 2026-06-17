@@ -39,11 +39,10 @@ cd /path/to/hall-command
 HALL_COMMAND_GIT_DIR="$(pwd)" bash install.sh
 ```
 
-也可以手动指定安装目录：
+也可以手动指定本地仓库路径：
 
 ```bash
 HALL_COMMAND_GIT_DIR=/path/to/hall-command \
-HALL_COMMAND_INSTALL_ROOT_PATH=/path/to/.hall-command \
 bash /path/to/hall-command/install.sh
 ```
 
@@ -65,6 +64,19 @@ bash /path/to/hall-command/install.sh
 source ~/.bashrc
 # 或
 source ~/.bash_profile
+```
+
+# 更新
+
+`install.sh` 会根据 `~/.hall-command` 目录是否存在自动判断是**安装**还是**更新**：
+
+- 目录不存在 → 显示「开始安装」
+- 目录已存在 → 显示「开始更新」，脚本文件覆盖，配置文件保留并提醒
+
+更新时直接重新运行 `install.sh` 即可：
+
+```bash
+bash /path/to/hall-command/install.sh
 ```
 
 # 备注
