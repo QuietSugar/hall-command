@@ -89,7 +89,7 @@ while getopts "adt:" opt; do
       echo "PRINT_CLEAN 设置为 true"
       ;;
     t)
-      TARGET_CHECK_DIR=$(realpath $OPTARG)
+      TARGET_CHECK_DIR=$(realpath_compat "$OPTARG")
       echo "TARGET_CHECK_DIR 设置为: $TARGET_CHECK_DIR"
       ;;
     d)

@@ -11,10 +11,10 @@ LOG_LEVEL_STDOUT="INFO"
 set -e
 # 基准目录
 if [ $# -eq 0 ]; then
-    SOURCE_BASE_ABS_PATH=$(realpath .)
+    SOURCE_BASE_ABS_PATH=$(realpath_compat .)
     log_success "此次操作当前目录: "$SOURCE_BASE_ABS_PATH
 else
-    SOURCE_BASE_ABS_PATH=$(realpath $1)
+    SOURCE_BASE_ABS_PATH=$(realpath_compat "$1")
     log_success "此次操作指定目录: "$SOURCE_BASE_ABS_PATH
 fi
 

@@ -101,11 +101,11 @@ function install_done() {
 # ====================================================================================
 # set user's private env if it exists
 if [ -d "$HOME/.hall-command/source" ]; then
-  while IFS= read -r -d '' FILE; do
+  while IFS= read -r FILE; do
     if [ -f "$FILE" ]; then
       source "$FILE" || echo "[WARN] Failed to source: $FILE" >&2
     fi
-  done < <(find "$HOME/.hall-command/source" -name '*.sh' -print0 | sort -z)
+  done < <(find "$HOME/.hall-command/source" -name '*.sh' -print | sort)
 fi
 # ====================================================================================
 EOF

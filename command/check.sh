@@ -10,7 +10,9 @@
 
 find_some_dir() {
   local key_word=$1
-  target_dirs=$(find ~ -maxdepth 3 -type d -name "*${key_word}*" -exec realpath {} \;)
+  target_dirs=$(find ~ -maxdepth 3 -type d -name "*${key_word}*" -print0 | while IFS= read -r -d '' dir; do
+      realpath_compat "$dir"
+  done)
   if [ -n "${target_dirs}" ]; then
       log_warning "找到包含 ${target_dirs} 的文件夹，路径如下："
       log_warning "${target_dirs}"

@@ -47,14 +47,20 @@ function setup_proxy() {
                 export http_proxy="$proxy_url"
                 export https_proxy="$proxy_url"
 
-                grep -q "export http_proxy=" ${proxy_file} 2>/dev/null && \
-                    sed -i "s|export http_proxy=.*|export http_proxy=\"$proxy_url\"|" ${proxy_file} || \
-                    echo "export http_proxy=\"$proxy_url\"" >> ${proxy_file}
+                if grep -q "export http_proxy=" "${proxy_file}" 2>/dev/null; then
+                    sed -i.bak "s|export http_proxy=.*|export http_proxy=\"$proxy_url\"|" "${proxy_file}"
+                    rm -f "${proxy_file}.bak"
+                else
+                    echo "export http_proxy=\"$proxy_url\"" >> "${proxy_file}"
+                fi
 
-                grep -q "export https_proxy=" ${proxy_file} 2>/dev/null && \
-                    sed -i "s|export https_proxy=.*|export https_proxy=\"$proxy_url\"|" ${proxy_file} || \
-                    echo "export https_proxy=\"$proxy_url\"" >> ${proxy_file}
-                source ${proxy_file}
+                if grep -q "export https_proxy=" "${proxy_file}" 2>/dev/null; then
+                    sed -i.bak "s|export https_proxy=.*|export https_proxy=\"$proxy_url\"|" "${proxy_file}"
+                    rm -f "${proxy_file}.bak"
+                else
+                    echo "export https_proxy=\"$proxy_url\"" >> "${proxy_file}"
+                fi
+                source "${proxy_file}"
                 echo "代理已设置为: $proxy_url"
             else
                 echo "未输入代理地址，跳过代理设置"
