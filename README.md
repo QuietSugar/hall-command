@@ -4,10 +4,6 @@
 >
 > 目标运行环境：Linux、macOS、Windows git-bash。
 
-# 注意
-
-假定没有安装 git，只有 wget 或者 curl。
-在 Windows 下面执行的时候需要使用 `git-bash`。
 
 # 安装
 
@@ -17,11 +13,6 @@
 curl -fsSL https://raw.githubusercontent.com/QuietSugar/hall-command/refs/heads/master/install.sh | bash
 ```
 
-国内加速：
-
-```bash
-curl -fsSL https://gh-proxy.com/https://raw.githubusercontent.com/QuietSugar/hall-command/refs/heads/master/install.sh | bash
-```
 
 ## 方式二：从本地已 clone 的仓库安装
 
@@ -79,22 +70,33 @@ hall-command 1.0.7-dev def56 # 从本地 git 仓库安装，且安装时存在�
 hall-command 1.0.7-release   # 从 release 包（curl/wget）安装
 ```
 
-# Git Hooks
+# 发布
 
-项目提供了 `.githooks/post-commit`，用于在提交后根据 `VERSION` 文件自动创建对应 tag：
+修改 `VERSION` 文件后，执行：
 
 ```bash
-# 启用 hooks（只需执行一次）
-git config core.hooksPath .githooks
+make release
 ```
 
-规则：
+`make release` 会：
 
-- 读取 `VERSION` 文件内容作为 tag 名称
-- 如果该 tag 已存在，则跳过
-- 如果 `VERSION` 文件为空或不存在，则跳过
+1. 检查 `VERSION` 是否为空
+2. 检查是否有未提交的修改
+3. 检查对应 tag 是否已存在
+4. 创建 tag 并推送到远程（只推送当前 tag）
+5. 自动递增 `VERSION` 的 patch 版本号
 
-> 注意：`VERSION` 文件的内容需要与要创建的 tag 名称保持一致。
+示例：
+
+```bash
+echo "1.0.8" > VERSION
+git add VERSION && git commit -m "bump version"
+make release
+# 已发布: 1.0.8
+# VERSION 已递增为: 1.0.9
+```
+
+> 注意：release 前必须提交 `VERSION` 修改，且工作区需要干净。
 
 # 环境变量
 
