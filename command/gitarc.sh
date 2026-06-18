@@ -1,15 +1,18 @@
 #!/bin/bash
 # ====================================================
-#   @version:		1.0.4
 #   遍历寻找目录下所有带 .git的目录,
 #	将它归档到 固定目录中
 #
 # ====================================================
 
+# shellcheck disable=SC1091
+# shellcheck source=lib/init.sh
 . "$(dirname "$0")/lib/init.sh"
-
+# shellcheck disable=SC1091
+# shellcheck source=lib/git_tool.sh
 . "$(dirname "$0")/lib/git_tool.sh"
 
+# shellcheck disable=SC2034
 LOG_LEVEL_STDOUT="INFO"
 
 set -e
@@ -58,9 +61,6 @@ move_git_dir() {
     local source_abs_dir="$1"
     # eg /base/a/b/c/.git
     local source_dot_git_abs_dir="$source_abs_dir/.git"
-    # eg /a/b/c
-    local git_relative_dir
-    git_relative_dir=$(echo "$source_abs_dir" | sed "s#$SOURCE_BASE_ABS_PATH##")
     # eg http://1.2.3.4/a/b/c.git
     local cloneUrl
     cloneUrl=$(git --git-dir="$source_dot_git_abs_dir" config --get remote.origin.url)
@@ -71,7 +71,7 @@ move_git_dir() {
     log_debug "【目标】项目相对路径:  $project_dir"
     # eg c
     local project_name
-    project_name=$(echo "${project_dir##*/}")
+    project_name="${project_dir##*/}"
     log_debug "【目标】项目名称:  $project_name"
     # 不带前缀和后缀的 git url eg 1.2.3.4/a/b/c
     local git_clone_to_dir

@@ -1,23 +1,29 @@
 #!/bin/bash
 # ====================================================
-#   @version:		1.0.1
 #   检查，用于提醒一些可能存在的问题
 #
 #   用法：check.sh <项目名1> [项目名2] ...
 # ====================================================
 
+# shellcheck disable=SC1091
+# shellcheck source=lib/init.sh
 . "$(dirname "$0")/lib/init.sh"
+# shellcheck disable=SC1091
+# shellcheck source=lib/git_tool.sh
 . "$(dirname "$0")/lib/git_tool.sh"
 
 find_some_dir() {
   local key_word="$1"
-  local target_dirs
-  target_dirs=$(find ~ -maxdepth 3 -type d -name "*${key_word}*" -print0 | while IFS= read -r -d '' dir; do
-      realpath_compat "$dir"
-  done)
-  if [ -n "${target_dirs}" ]; then
+  local dirs=()
+  while IFS= read -r -d '' dir; do
+      dirs+=("$(realpath_compat "$dir")")
+  done < <(find ~ -maxdepth 3 -type d -name "*${key_word}*" -print0 2>/dev/null)
+
+  if [ ${#dirs[@]} -gt 0 ]; then
       log_warning "找到包含 ${key_word} 的文件夹，路径如下："
-      log_warning "${target_dirs}"
+      for d in "${dirs[@]}"; do
+          log_warning "$d"
+      done
   fi
 }
 

@@ -6,6 +6,11 @@ set -o pipefail
 HALL_COMMAND_NAME="hall-command"
 
 # 允许通过环境变量覆盖源码目录
+# 如果 install.sh 位于一个 hall-command 仓库内，优先使用当前仓库
+script_dir="$(cd -P -- "$(dirname -- "$0")" && pwd)"
+if [ -z "${HALL_COMMAND_GIT_DIR:-}" ] && [ -f "$script_dir/install.sh" ] && [ -d "$script_dir/command" ] && [ -d "$script_dir/source" ]; then
+    HALL_COMMAND_GIT_DIR="$script_dir"
+fi
 HALL_COMMAND_GIT_DIR="${HALL_COMMAND_GIT_DIR:-${HOME}/.cache/hall-command/src}"
 HALL_COMMAND_INSTALL_ROOT_PATH="${HOME}/.${HALL_COMMAND_NAME}"
 
@@ -48,11 +53,20 @@ fetch(){
 get_latest_release_url(){
     if [ -n "${RELEASE_FILE_URL:-}" ]; then
         echo "${RELEASE_FILE_URL}"
-    else
-        releases=$(fetch https://api.github.com/repos/QuietSugar/hall-command/releases/latest)
-        url=$(echo "$releases" | grep -wo -m1 "https://.*.tar.gz" || true)
-        echo "${url}"
+        return 0
     fi
+
+    local releases tag_name url
+    releases=$(fetch https://api.github.com/repos/QuietSugar/hall-command/releases/latest)
+    tag_name=$(printf '%s' "$releases" | grep -o '"tag_name": "[^"]*"' | head -n1 | sed 's/.*"tag_name": "//; s/"$//')
+
+    if [ -z "$tag_name" ]; then
+        echo "[ERROR] 无法从 GitHub API 获取最新版本" >&2
+        return 1
+    fi
+
+    url="https://github.com/QuietSugar/hall-command/releases/download/${tag_name}/hall-command-${tag_name}.tar.gz"
+    echo "${url}"
 }
 
 verify_checksum(){
@@ -162,7 +176,7 @@ install_from_git_dir() {
 
     # 配置文件不覆盖，仅提醒
     copy_config_or_warn "${HALL_COMMAND_GIT_DIR}/example.env" "${HALL_COMMAND_INSTALL_ROOT_PATH}/example.env"
-    copy_config_or_warn "${HALL_COMMAND_GIT_DIR}/example.env" "${HALL_COMMAND_INSTALL_ROOT_PATH}/.env"
+    copy_config_or_warn "${HALL_COMMAND_GIT_DIR}/example.env" "${HALL_COMMAND_INSTALL_ROOT_PATH}/env"
 
     # 只给脚本加执行权限，而不是整个安装目录
     find "${HALL_COMMAND_INSTALL_ROOT_PATH}/command" -type f -name '*.sh' -exec chmod +x {} \;
@@ -203,6 +217,7 @@ append_path_config(){
         tmp_file=$(mktemp)
         awk "/^${start_marker}$/{skip=1; next} /^${end_marker}$/{skip=0; next} !skip" "$shell_rc" > "$tmp_file"
         mv "$tmp_file" "$shell_rc"
+        rm -f "$tmp_file"
     fi
 
     {
@@ -215,6 +230,38 @@ append_path_config(){
     echo "[INFO] 已更新 PATH 配置：${shell_rc}"
 }
 
+append_source_block(){
+    local shell_rc="$1"
+    local start_marker="# HALL_COMMAND_SOURCE_START"
+    local end_marker="# HALL_COMMAND_SOURCE_END"
+
+    touch "$shell_rc"
+
+    # 如果已存在旧的配置块，先移除，避免重复或路径变更后残留旧配置
+    if grep -Fxq "$start_marker" "$shell_rc" 2>/dev/null; then
+        local tmp_file
+        tmp_file=$(mktemp)
+        awk "/^${start_marker}$/{skip=1; next} /^${end_marker}$/{skip=0; next} !skip" "$shell_rc" > "$tmp_file"
+        mv "$tmp_file" "$shell_rc"
+        rm -f "$tmp_file"
+    fi
+
+    cat <<'EOF' >> "$shell_rc"
+
+# HALL_COMMAND_SOURCE_START
+# 由 install.sh 自动生成，请勿手动修改
+if [ -d "$HOME/.hall-command/source" ]; then
+  while IFS= read -r FILE; do
+    if [ -f "$FILE" ]; then
+      source "$FILE" || echo "[WARN] Failed to source: $FILE" >&2
+    fi
+  done < <(find "$HOME/.hall-command/source" -name '*.sh' -print | sort)
+fi
+# HALL_COMMAND_SOURCE_END
+EOF
+    echo "[INFO] 已更新 source 配置：${shell_rc}"
+}
+
 install_done() {
     local bin_path="${HALL_COMMAND_INSTALL_ROOT_PATH}/command"
 
@@ -224,31 +271,16 @@ install_done() {
         echo "[INFO] Windows 安装路径：${win_bin_path}"
         append_path_config "${HOME}/.bash_profile" "$bin_path"
         append_path_config "${HOME}/.bashrc" "$bin_path"
+        append_source_block "${HOME}/.bash_profile"
+        append_source_block "${HOME}/.bashrc"
     else
-        mkdir -p "$HOME/.zsh/source"
-        append_path_config "$HOME/.zsh/source/${HALL_COMMAND_NAME}.sh" "$bin_path"
+        append_path_config "$HOME/.zshrc" "$bin_path"
         append_path_config "$HOME/.bashrc" "$bin_path"
         append_path_config "$HOME/.profile" "$bin_path"
+        append_source_block "$HOME/.zshrc"
+        append_source_block "$HOME/.bashrc"
+        append_source_block "$HOME/.profile"
     fi
-
-    cat <<'EOF'
-# ====================================================================================
-# 已尝试自动配置 PATH。如果未生效，请重新加载 shell 配置文件或手动添加以下内容：
-# 1. .profile
-# 2. .bashrc（适用于 Linux 和 git-bash）
-# 3. .bash_profile（git-bash）
-# 以下是具体内容：
-# ====================================================================================
-# set user's private env if it exists
-if [ -d "$HOME/.hall-command/source" ]; then
-  while IFS= read -r FILE; do
-    if [ -f "$FILE" ]; then
-      source "$FILE" || echo "[WARN] Failed to source: $FILE" >&2
-    fi
-  done < <(find "$HOME/.hall-command/source" -name '*.sh' -print | sort)
-fi
-# ====================================================================================
-EOF
 
     echo "${bin_path}"
     echo 'install done'

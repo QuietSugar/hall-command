@@ -1,6 +1,5 @@
 #!/bin/bash
 # ====================================================
-#   @version:		1.0.1
 # ====================================================
 
 
@@ -34,9 +33,10 @@ get_git_repo_path() {
 #  http://1.2.3.4:8080/a/b/c.git -> 1.2.3.4/8080/a/b/c
 #  git@1.2.3.4:a/b/c.git -> 1.2.3.4/8080/a/b/c
 function make_filename_safe() {
-    local dirPath="$1"
+    local dirPath
+    dirPath="$1"
     # 去除前后空白（-e 执行多个编辑命令）
-    local dirPath=$(echo "$dirPath" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+    dirPath=$(echo "$dirPath" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
     # 去除特定前缀
     dirPath="${dirPath#https://gh-proxy.com/}"
     dirPath="${dirPath#https://}"

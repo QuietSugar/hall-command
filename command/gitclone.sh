@@ -1,6 +1,5 @@
 #!/bin/bash
 
-## @version:		1.1.6
 
 ## @description:
 # ====================================================
@@ -10,10 +9,15 @@
 #
 # ====================================================
 
+# shellcheck disable=SC1091
+# shellcheck source=lib/init.sh
 . "$(dirname "$0")/lib/init.sh"
+# shellcheck disable=SC1091
+# shellcheck source=lib/git_tool.sh
 . "$(dirname "$0")/lib/git_tool.sh"
 
 
+# shellcheck disable=SC2034
 LOG_LEVEL_STDOUT="DEBUG"
 
 if [ $# -eq 0 ]; then
@@ -30,7 +34,7 @@ log_success "【项目远程地址         】$cloneUrl"
 # 项目-相对路径
 project_relative_dir=$(make_filename_safe "$cloneUrl")
 log_debug "【项目相对路径           】$project_relative_dir"
-project_name=$(echo "${project_relative_dir##*/}")
+project_name="${project_relative_dir##*/}"
 log_debug "【项目名称               】$project_name"
 project_parent_relative_dir=${project_relative_dir%/*}
 log_debug "【项目父目录的相对路径   】$project_parent_relative_dir"
@@ -49,4 +53,4 @@ else
   log_warning "已存在,跳过   】$project_absolute_dir"
 fi
 
-cd "$project_parent_absolute_dir/$project_name"
+cd "$project_parent_absolute_dir/$project_name" || exit 1

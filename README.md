@@ -1,6 +1,8 @@
 # hall-command
 
 > 命令相关工具
+>
+> 目标运行环境：Linux、macOS、Windows git-bash。
 
 # 注意
 
@@ -52,10 +54,10 @@ bash /path/to/hall-command/install.sh
 
 1. 将 `command/` 下的脚本复制到 `~/.hall-command/command/`
 2. 生成不带 `.sh` 后缀的可执行命令副本
-3. 从 `example.env` 生成 `~/.hall-command/.env`（如果不存在）
+3. 从 `example.env` 生成 `~/.hall-command/env`（如果不存在）
 4. 自动将 `~/.hall-command/command` 加入 shell 的 PATH：
    - Windows git-bash：`~/.bash_profile`、`~/.bashrc`
-   - Linux/macOS：`~/.zsh/source/hall-command.sh`、`~/.bashrc`、`~/.profile`
+   - Linux/macOS：`~/.zshrc`、`~/.bashrc`、`~/.profile`
 5. 如果发布时附带 `.sha256` 校验文件，下载后会自动校验
 
 安装完成后，重新加载配置文件或重启终端即可使用：
@@ -64,6 +66,8 @@ bash /path/to/hall-command/install.sh
 source ~/.bashrc
 # 或
 source ~/.bash_profile
+# 或（zsh）
+source ~/.zshrc
 ```
 
 # 更新

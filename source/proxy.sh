@@ -1,21 +1,25 @@
 #!/bin/bash
 
+YELLOW='\033[1;33m'
+CLEAR='\033[0m'
+
 function setup_proxy() {
-    local zsh_source_path
-    zsh_source_path=~/.hall-command/command/source
-    mkdir -p ${zsh_source_path}
-    local proxy_file="${zsh_source_path}/proxy.sh"
+    local source_path
+    source_path="${HOME}/.hall-command/source"
+    mkdir -p "${source_path}"
+    local proxy_file="${source_path}/proxy.sh"
     if [ -s "${proxy_file}" ]; then
+      # shellcheck disable=SC1090
       source "${proxy_file}"
     fi
     # 检查是否已设置代理
     local current_http_proxy
-    current_http_proxy=$(echo $http_proxy | head -n1)
+    current_http_proxy=$(printf '%s' "${http_proxy}" | head -n1)
     local current_https_proxy
-    current_https_proxy=$(echo $https_proxy | head -n1)
+    current_https_proxy=$(printf '%s' "${https_proxy}" | head -n1)
 
     if [ -n "$current_http_proxy" ] || [ -n "$current_https_proxy" ]; then
-        printf "${YELLOW}检测到当前已设置代理:${CLEAR}\n"
+        printf '%b检测到当前已设置代理:%b\n' "$YELLOW" "$CLEAR"
         [ -n "$current_http_proxy" ] && echo "  HTTP_PROXY: $current_http_proxy"
         [ -n "$current_https_proxy" ] && echo "  HTTPS_PROXY: $current_https_proxy"
 
@@ -60,6 +64,7 @@ function setup_proxy() {
                 else
                     echo "export https_proxy=\"$proxy_url\"" >> "${proxy_file}"
                 fi
+                # shellcheck disable=SC1090
                 source "${proxy_file}"
                 echo "代理已设置为: $proxy_url"
             else
@@ -80,6 +85,6 @@ function unset_proxy() {
   unset all_proxy
   echo "Unset proxy"
 }
-                                                                                                                                                            # Shadowsocks proxy
+
 alias proxy="setup_proxy"
 alias unproxy="unset_proxy"

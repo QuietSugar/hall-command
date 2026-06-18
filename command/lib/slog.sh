@@ -1,19 +1,16 @@
-#!/bin/sh
+#!/bin/bash
 #--------------------------------------------------------------------------------------------------
-# slog - Makes logging in POSIX shell scripting suck less
+# slog - Makes logging in shell scripting suck less
 # Copyright (c) Fred Palmer
-# POSIX version Copyright Joe Cooper
 # Licensed under the MIT license
 # http://github.com/swelljoe/slog
 #--------------------------------------------------------------------------------------------------
-set -e  # Fail on first error
 
 # LOG_LEVEL_STDOUT - Define to determine above which level goes to STDOUT.
 # By default, all log levels will be written to STDOUT.
 LOG_LEVEL_STDOUT="INFO"
 
 # Useful global variables that users may wish to reference
-SCRIPT_ARGS="$@"
 SCRIPT_NAME="$0"
 SCRIPT_NAME="${SCRIPT_NAME#\./}"
 SCRIPT_NAME="${SCRIPT_NAME##/*/}"
@@ -45,25 +42,30 @@ else
     LOG_DEBUG_COLOR=$(tput setaf 4)
 fi
 
-printf "slog ${LOG_SUCCESS_COLOR}[$(date +"%Y-%m-%d %H:%M:%S %Z")] ${LOG_DEFAULT_COLOR}\n"
+printf '%s[%s]%s\n' "$LOG_SUCCESS_COLOR" "$(date +"%Y-%m-%d %H:%M:%S %Z")" "$LOG_DEFAULT_COLOR"
+
+# 将日志级别名称转换为整数
+log_level_to_int() {
+    case "$1" in
+        DEBUG)   echo 0 ;;
+        INFO)    echo 1 ;;
+        SUCCESS) echo 2 ;;
+        WARNING) echo 3 ;;
+        ERROR)   echo 4 ;;
+        *)       echo 1 ;;
+    esac
+}
 
 log() {
     local log_text="$1"
     local log_level="$2"
     local log_color="$3"
 
-    # Levels for comparing against LOG_LEVEL_STDOUT 
-    local LOG_LEVEL_DEBUG=0
-    local LOG_LEVEL_INFO=1
-    local LOG_LEVEL_SUCCESS=2
-    local LOG_LEVEL_WARNING=3
-    local LOG_LEVEL_ERROR=4
-
     # Default level to "info"
-    [ -z ${log_level} ] && log_level="INFO";
-    [ -z ${log_color} ] && log_color="${LOG_INFO_COLOR}";
+    [ -z "${log_level}" ] && log_level="INFO"
+    [ -z "${log_color}" ] && log_color="${LOG_INFO_COLOR}"
 
-    # Validate LOG_LEVEL_STDOUT  since they'll be eval-ed.
+    # Validate LOG_LEVEL_STDOUT
     case $LOG_LEVEL_STDOUT in
         DEBUG|INFO|SUCCESS|WARNING|ERROR)
             ;;
@@ -73,15 +75,14 @@ log() {
     esac
 
     # Check LOG_LEVEL_STDOUT to see if this level of entry goes to STDOUT.
-    # XXX This is the horror that happens when your language doesn't have a hash data struct.
-    eval log_level_int="\$LOG_LEVEL_${log_level}";
-    eval log_level_stdout="\$LOG_LEVEL_${LOG_LEVEL_STDOUT}"
-    if [ $log_level_stdout -le $log_level_int ]; then
+    local log_level_int log_level_stdout
+    log_level_int=$(log_level_to_int "$log_level")
+    log_level_stdout=$(log_level_to_int "$LOG_LEVEL_STDOUT")
+    if [ "$log_level_stdout" -le "$log_level_int" ]; then
         # STDOUT
-        printf "${log_color}[$(date +"%H:%M:%S")] ${log_text} ${LOG_DEFAULT_COLOR}\n";
-        # printf "${log_color}[$(date +"%Y-%m-%d %H:%M:%S %Z")] [${log_level}] ${log_text} ${LOG_DEFAULT_COLOR}\n";
+        printf '%s[%s] %s %s\n' "$log_color" "$(date +"%H:%M:%S")" "$log_text" "$LOG_DEFAULT_COLOR"
     fi
-    return 0;
+    return 0
 }
 
 log_info()      { log "$@"; }
@@ -92,4 +93,3 @@ log_debug()     { log "$1" "DEBUG" "${LOG_DEBUG_COLOR}"; }
 
 # End Logging Section
 #--------------------------------------------------------------------------------------------------
-

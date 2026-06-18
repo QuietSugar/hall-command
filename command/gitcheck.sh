@@ -1,7 +1,6 @@
 #!/bin/bash
 
 # ====================================================
-#   @version:		1.0.2
 # ====================================================
 
 # ====================================================
@@ -20,6 +19,8 @@ IS_DEBUG=false
 TARGET_CHECK_DIR=$(pwd)
 
 
+# shellcheck disable=SC1091
+# shellcheck source=lib/init.sh
 . "$(dirname "$0")/lib/init.sh"
 
 function lm_traverse_dir() {
@@ -28,14 +29,14 @@ function lm_traverse_dir() {
   fi
 	# 判断.git文件是否存在,如果存在,表示当前目录是一个git仓库
 	if [ -d ".git" ]; then
-		local this_repo_relative_path=$(echo "$(pwd)" | sed "s#$TARGET_CHECK_DIR##")
+		local this_repo_relative_path="${PWD#"$TARGET_CHECK_DIR"}"
 		local this_repo_status=''
 		if [ -n "$(git status -s)" ]; then
 		  this_repo_status+="[未提交$(trim "$(git status -s | wc -l)")]"
 		fi
 		if [ -n "$(git remote -v)" ]; then
 		  # 判断当前分支是否有远程跟踪分支
-      if git rev-parse --abbrev-ref HEAD@{upstream} >/dev/null 2>&1; then
+      if git rev-parse --abbrev-ref 'HEAD@{upstream}' >/dev/null 2>&1; then
           # 判断是否有未推送
           if [ -n "$(git cherry -v)" ]; then
             this_repo_status+="[未推送$(git cherry -v | wc -l)]"
@@ -46,8 +47,8 @@ function lm_traverse_dir() {
 
 
 			# 获取stash数量
-			stash_count=$(git stash list | wc -l)
-			stash_count=$(echo "$stash_count" | tr -d ' ')  # 去除可能的空白字符
+			local stash_count
+			stash_count=$(git stash list | wc -l | tr -d ' ')
 
 			# 判断并输出结果
 			if [ "$stash_count" -ne 0 ]; then
@@ -57,7 +58,7 @@ function lm_traverse_dir() {
 		  this_repo_status+="[无远程]"
 		fi
     if [ -n "$this_repo_status" ]; then # 输出结果
-			log_error "[ DIRTY ]$this_repo_status \${TARGET_CHECK_DIR}${this_repo_relative_path}"
+			log_error "[ DIRTY ]$this_repo_status ${TARGET_CHECK_DIR}${this_repo_relative_path}"
 		else
       if [ "$PRINT_CLEAN" = true ]; then
         log_info "[ CLEAN ]${this_repo_relative_path}"

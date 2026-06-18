@@ -40,6 +40,10 @@ jobs:
           elif [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]]; then
           # 处理手动触发的情况
           VERSION_NAME=${{ github.event.inputs.version }}
+          if [ -z "$VERSION_NAME" ]; then
+            VERSION_NAME=$(cat VERSION)
+            echo "手动触发未提供版本，使用 VERSION 文件: $VERSION_NAME"
+          fi
           echo "手动触发: 使用版本 $VERSION_NAME"
           else
           echo "未知触发类型，无法确定版本号！" >&2
@@ -50,14 +54,14 @@ jobs:
       - name: Create archive
         run: |
           cd ..
-          tar --exclude='.*' -czvf "${{ env.project_name }}-${{ env.version_name }}.tar.gz"  --exclude='.git'  "${{ env.project_name }}"
-          zip -r "${{ env.project_name }}-${{ env.version_name }}.zip" "${{ env.project_name }}" -x '*/\.*'
+          tar --exclude='.git' --exclude='.github' --exclude='.idea' --exclude='.gitignore' --exclude='.gitattribute' -czvf "${{ env.project_name }}-${{ env.version_name }}.tar.gz" "${{ env.project_name }}"
+          zip -r "${{ env.project_name }}-${{ env.version_name }}.zip" "${{ env.project_name }}" -x '*/.git/*' -x '*/.github/*' -x '*/.idea/*' -x '*/.gitignore' -x '*/.gitattribute'
       - name: Generate checksums
         run: |
           cd ..
           sha256sum ${{ env.project_name }}-${{ env.version_name }}.tar.gz ${{ env.project_name }}-${{ env.version_name }}.zip > checksums.txt
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.version_name }}
           name: Release ${{ env.version_name }}

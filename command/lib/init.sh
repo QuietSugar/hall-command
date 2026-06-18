@@ -1,7 +1,6 @@
 #!/bin/bash
 
 # ====================================================
-#   @version:		1.0.1
 # ====================================================
 
 # ====================================================
@@ -16,11 +15,17 @@ SOURCE="${BASH_SOURCE[0]}"
 while [ -h "$SOURCE" ]; do
     DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
     SOURCE="$(readlink "$SOURCE")"
-    [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
+    [[ "$SOURCE" != /* ]] && SOURCE="$DIR/$SOURCE"
 done
 # 脚本所在目录的路径
 SCRIPT_DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
-. $SCRIPT_DIR/slog.sh
-. $SCRIPT_DIR/load_config.sh
-. $SCRIPT_DIR/tool.sh
+# shellcheck disable=SC1091
+# shellcheck source=command/lib/slog.sh
+. "$SCRIPT_DIR/slog.sh"
+# shellcheck disable=SC1091
+# shellcheck source=command/lib/load_config.sh
+. "$SCRIPT_DIR/load_config.sh"
+# shellcheck disable=SC1091
+# shellcheck source=command/lib/tool.sh
+. "$SCRIPT_DIR/tool.sh"

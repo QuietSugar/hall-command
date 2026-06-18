@@ -18,4 +18,4 @@ else
     echo "unknown OS or architecture"
     exit 1
 fi
-echo $target
+echo "$target"
