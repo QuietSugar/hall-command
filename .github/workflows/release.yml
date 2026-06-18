@@ -52,6 +52,10 @@ jobs:
           cd ..
           tar --exclude='.*' -czvf "${{ env.project_name }}-${{ env.version_name }}.tar.gz"  --exclude='.git'  "${{ env.project_name }}"
           zip -r "${{ env.project_name }}-${{ env.version_name }}.zip" "${{ env.project_name }}" -x '*/\.*'
+      - name: Generate checksums
+        run: |
+          cd ..
+          sha256sum ${{ env.project_name }}-${{ env.version_name }}.tar.gz ${{ env.project_name }}-${{ env.version_name }}.zip > checksums.txt
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
@@ -60,6 +64,7 @@ jobs:
           files: |
             ../${{ env.project_name }}-${{ env.version_name }}.tar.gz
             ../${{ env.project_name }}-${{ env.version_name }}.zip
+            ../checksums.txt
           fail_on_unmatched_files: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

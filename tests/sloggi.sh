@@ -4,7 +4,7 @@
 # non-tap output in the log.
 
 LOG_PATH="./my.log"
-. ../common/slog.sh
+. "$(dirname "$0")/../command/lib/slog.sh"
 
 log "ok 1 - This is regular log message... "
 

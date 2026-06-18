@@ -5,9 +5,8 @@ set -o pipefail
 
 HALL_COMMAND_NAME="hall-command"
 
-# 允许通过环境变量覆盖安装路径
-THIS_GIT_USER_DIR="${HALL_COMMAND_GIT_USER_DIR:-${HOME}/git-repo/github.com/QuietSugar}"
-HALL_COMMAND_GIT_DIR="${HALL_COMMAND_GIT_DIR:-${THIS_GIT_USER_DIR}/hall-command}"
+# 允许通过环境变量覆盖源码目录
+HALL_COMMAND_GIT_DIR="${HALL_COMMAND_GIT_DIR:-${HOME}/.cache/hall-command/src}"
 HALL_COMMAND_INSTALL_ROOT_PATH="${HOME}/.${HALL_COMMAND_NAME}"
 
 # 跨平台 realpath 兼容实现
@@ -59,8 +58,10 @@ get_latest_release_url(){
 verify_checksum(){
     local tarball="$1"
     local url="$2"
-    local checksum_url="${url}.sha256"
-    local checksum_file="${tarball}.sha256"
+    local checksum_url="${url%/*}/checksums.txt"
+    local checksum_file="checksums.txt"
+    local tarball_basename
+    tarball_basename=$(basename -- "$tarball")
 
     if ! fetch "${checksum_file}" "${checksum_url}" >/dev/null 2>&1; then
         echo "[WARN] 未找到校验文件 ${checksum_url}，跳过校验" >&2
@@ -68,7 +69,12 @@ verify_checksum(){
     fi
 
     local expected_hash actual_hash
-    expected_hash=$(tr -d '[:space:]' < "${checksum_file}")
+    expected_hash=$(awk -v name="${tarball_basename}" '$2 == name {print $1}' "${checksum_file}")
+
+    if [ -z "$expected_hash" ]; then
+        echo "[WARN] 在校验文件中未找到 ${tarball_basename}，跳过校验" >&2
+        return 0
+    fi
 
     if command -v sha256sum >/dev/null 2>&1; then
         actual_hash=$(sha256sum "${tarball}" | awk '{print $1}')
@@ -88,6 +94,7 @@ verify_checksum(){
 }
 
 download_and_un_tar(){
+    local url
     url=$(get_latest_release_url)
     echo "下载来自：${url}"
     if [ -z "$url" ]; then
@@ -97,25 +104,27 @@ download_and_un_tar(){
 
     echo "Downloading hall-command..."
 
+    local tarball_name
+    tarball_name=$(basename -- "$url")
     temp_dir=$(mktemp -dt hall-command.XXXXXX)
     trap 'rm -rf "$temp_dir"' EXIT INT TERM
     cd "$temp_dir"
 
-    if ! fetch hall-command.tar.gz "$url"; then
+    if ! fetch "$tarball_name" "$url"; then
         echo "Could not download tarball" >&2
         exit 1
     fi
 
-    verify_checksum hall-command.tar.gz "$url"
+    verify_checksum "$tarball_name" "$url"
 
-    tar xzf hall-command.tar.gz
+    tar xzf "$tarball_name"
 
     if [ ! -d "hall-command" ]; then
         echo "[ERROR] 解压后未找到 hall-command 目录" >&2
         exit 1
     fi
 
-    mkdir -p "${THIS_GIT_USER_DIR}"
+    mkdir -p "$(dirname -- "${HALL_COMMAND_GIT_DIR}")"
     rm -rf "${HALL_COMMAND_GIT_DIR}"
     mv hall-command "${HALL_COMMAND_GIT_DIR}"
 }

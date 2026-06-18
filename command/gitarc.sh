@@ -1,6 +1,6 @@
 #!/bin/bash
 # ====================================================
-#   @version:		1.0.3
+#   @version:		1.0.4
 #   遍历寻找目录下所有带 .git的目录,
 #	将它归档到 固定目录中
 #
@@ -15,11 +15,11 @@ LOG_LEVEL_STDOUT="INFO"
 set -e
 # 基准目录(也就是扫描的根目录)
 if [ $# -eq 0 ]; then
-    SOURCE_BASE_ABS_PATH=$(realpath_compat .)
-    log_success "此次操作当前目录: "$SOURCE_BASE_ABS_PATH
+    SOURCE_BASE_ABS_PATH=$(realpath_compat ".")
+    log_success "此次操作当前目录: $SOURCE_BASE_ABS_PATH"
 else
     SOURCE_BASE_ABS_PATH=$(realpath_compat "$1")
-    log_success "此次操作指定目录: "$SOURCE_BASE_ABS_PATH
+    log_success "此次操作指定目录: $SOURCE_BASE_ABS_PATH"
 fi
 
 # 检查目录是否存在
@@ -39,7 +39,7 @@ find_git_dirs() {
     local this_dir="$1"
     # 检查当前目录是否有.git子目录
     if [ -d "$this_dir/.git" ]; then
-        log_debug "【原始】绝对路径: "$this_dir
+        log_debug "【原始】绝对路径: $this_dir"
         move_git_dir "$this_dir"
         log_success ""
         return
@@ -55,30 +55,36 @@ find_git_dirs() {
 }
 move_git_dir() {
     # eg /base/a/b/c
-    local source_abs_dir=$1
+    local source_abs_dir="$1"
     # eg /base/a/b/c/.git
     local source_dot_git_abs_dir="$source_abs_dir/.git"
     # eg /a/b/c
-    local git_relative_dir=$(echo "${source_abs_dir}" | sed "s#$SOURCE_BASE_ABS_PATH##")
+    local git_relative_dir
+    git_relative_dir=$(echo "$source_abs_dir" | sed "s#$SOURCE_BASE_ABS_PATH##")
     # eg http://1.2.3.4/a/b/c.git
-    local cloneUrl=$(git --git-dir=${source_dot_git_abs_dir} config --get remote.origin.url)
-    is_git_url_https_ssh $cloneUrl
+    local cloneUrl
+    cloneUrl=$(git --git-dir="$source_dot_git_abs_dir" config --get remote.origin.url)
+    is_git_url_https_ssh "$cloneUrl"
     #替换
-    project_dir=$(make_filename_safe $cloneUrl)
+    local project_dir
+    project_dir=$(make_filename_safe "$cloneUrl")
     log_debug "【目标】项目相对路径:  $project_dir"
     # eg c
-    project_name=$(echo ${project_dir##*/})
+    local project_name
+    project_name=$(echo "${project_dir##*/}")
     log_debug "【目标】项目名称:  $project_name"
     # 不带前缀和后缀的 git url eg 1.2.3.4/a/b/c
+    local git_clone_to_dir
     git_clone_to_dir=${project_dir%/*}
     log_debug "【目标】所在目录相对路径:  $git_clone_to_dir"
+    local absolute_project_dir
     absolute_project_dir="$TARGET_BASE_ABS_PATH/$git_clone_to_dir"
     log_debug "【目标】所在目录绝对路径:  $absolute_project_dir"
 
     if [ ! -d "$absolute_project_dir" ]; then
         mkdir -p "$absolute_project_dir"
     fi
-    local new_path=$absolute_project_dir/$project_name
+    local new_path="$absolute_project_dir/$project_name"
     log_debug "【new_path:  $new_path"
     if [ ! -d "$new_path" ]; then
         # 使用mv实现移动和重命名
@@ -86,11 +92,11 @@ move_git_dir() {
         log_success "移动并重命名为   $new_path"
         mv -v "$source_abs_dir" "$new_path"
     else
-        log_warning "目录已存在已存在,无法移动"$new_path
+        log_warning "目录已存在,无法移动$new_path"
     fi
 }
 
 
 
 # 调用函数开始查找
-find_git_dirs $SOURCE_BASE_ABS_PATH
+find_git_dirs "$SOURCE_BASE_ABS_PATH"

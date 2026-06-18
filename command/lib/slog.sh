@@ -6,7 +6,6 @@
 # Licensed under the MIT license
 # http://github.com/swelljoe/slog
 #--------------------------------------------------------------------------------------------------
-printf "slog $(tput setaf 2)[$(date +"%Y-%m-%d %H:%M:%S %Z")] \n";
 set -e  # Fail on first error
 
 # LOG_LEVEL_STDOUT - Define to determine above which level goes to STDOUT.
@@ -45,6 +44,8 @@ else
     LOG_WARN_COLOR=$(tput setaf 3)
     LOG_DEBUG_COLOR=$(tput setaf 4)
 fi
+
+printf "slog ${LOG_SUCCESS_COLOR}[$(date +"%Y-%m-%d %H:%M:%S %Z")] ${LOG_DEFAULT_COLOR}\n"
 
 log() {
     local log_text="$1"

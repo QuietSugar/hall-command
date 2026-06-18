@@ -30,7 +30,7 @@ cd /path/to/hall-command
 bash install.sh
 ```
 
-> 只有当项目位于默认路径 `~/git-repo/github.com/QuietSugar/hall-command` 时，才不需要额外配置。
+> 只有当项目位于默认路径 `~/.cache/hall-command/src` 时，才不需要额外配置。
 
 如果 clone 到了其他位置，通过环境变量指定仓库路径：
 

@@ -21,8 +21,8 @@ is_git_url_https_ssh() {
 }
 
 get_git_repo_path() {
-  # 目标基础目录
-  local git_repo_path="$HOME/git-repo"
+  # 目标基础目录，支持通过环境变量覆盖
+  local git_repo_path="${HALL_GIT_REPO_PATH:-${HOME}/git-repo}"
   if [ ! -d "$git_repo_path" ]; then
       mkdir -p "$git_repo_path"
   fi
