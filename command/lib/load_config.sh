@@ -24,6 +24,10 @@ if [ -f "$config_file" ]; then
         key=${line%%=*}
         value=${line#*=}
         [ -z "$key" ] && continue
+        # 扩展配置文件中常见的路径变量
+        value="${value/#\~/$HOME}"
+        value="${value//\$\{HOME\}/$HOME}"
+        value="${value//\$HOME/$HOME}"
         export "$key=$value"
         log_debug "$key=$value"
     done < "$config_file"
