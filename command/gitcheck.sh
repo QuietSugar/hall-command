@@ -33,6 +33,7 @@ is_debug=false
 quiet=false
 check_remote=false
 target_dir=$(pwd)
+header_printed=false
 
 while getopts "adt:qrh" opt; do
     case $opt in
@@ -68,6 +69,14 @@ fi
 dirty_count=0
 clean_count=0
 exit_status=0
+
+print_header() {
+    if [ "$header_printed" = false ]; then
+        printf '%b%-8s%b  %-12s  %-40s  %s\n' \
+            "$LOG_INFO_COLOR" "STATUS" "$LOG_DEFAULT_COLOR" "BRANCH" "DETAILS" "PATH"
+        header_printed=true
+    fi
+}
 
 check_repo() {
     local git_dir="$1"
@@ -108,11 +117,15 @@ check_repo() {
     fi
 
     if [ -n "$status" ]; then
-        log_warning "[ DIRTY ][${branch}]$status ${repo_dir}"
+        print_header
+        printf '%b%-8s%b  %-12s  %-40s  %s\n' \
+            "$LOG_WARN_COLOR" "[DIRTY]" "$LOG_DEFAULT_COLOR" "[$branch]" "$status" "$relative_path"
         exit_status=1
         dirty_count=$((dirty_count + 1))
     elif [ "$print_clean" = true ]; then
-        log_info "[ CLEAN ][${branch}] ${relative_path}"
+        print_header
+        printf '%b%-8s%b  %-12s  %-40s  %s\n' \
+            "$LOG_SUCCESS_COLOR" "[CLEAN]" "$LOG_DEFAULT_COLOR" "[$branch]" "[-]" "$relative_path"
         clean_count=$((clean_count + 1))
     fi
 }
