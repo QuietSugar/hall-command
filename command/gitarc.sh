@@ -64,7 +64,10 @@ move_git_dir() {
     # eg http://1.2.3.4/a/b/c.git
     local cloneUrl
     cloneUrl=$(git --git-dir="$source_dot_git_abs_dir" config --get remote.origin.url)
-    is_git_url_https_ssh "$cloneUrl"
+    if ! is_git_url_https_ssh "$cloneUrl"; then
+        log_warning "跳过无效 Git 地址: $cloneUrl"
+        return
+    fi
     #替换
     local project_dir
     project_dir=$(make_filename_safe "$cloneUrl")

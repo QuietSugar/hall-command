@@ -27,7 +27,9 @@ fi
 
 cloneUrl="$1"
 
-is_git_url_https_ssh "$cloneUrl"
+if ! is_git_url_https_ssh "$cloneUrl"; then
+  exit 1
+fi
 local_git_repo_path=$(get_git_repo_path)
 
 log_success "【项目远程地址         】$cloneUrl"

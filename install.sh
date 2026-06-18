@@ -203,11 +203,12 @@ copy_sh_file() {
     popd >/dev/null || return
 }
 
-append_path_config(){
+append_rc_block(){
     local shell_rc="$1"
-    local bin_path="$2"
-    local start_marker="# HALL_COMMAND_PATH_START"
-    local end_marker="# HALL_COMMAND_PATH_END"
+    local marker="$2"
+    local content="$3"
+    local start_marker="# HALL_COMMAND_${marker}_START"
+    local end_marker="# HALL_COMMAND_${marker}_END"
 
     touch "$shell_rc"
 
@@ -224,32 +225,22 @@ append_path_config(){
         echo ""
         echo "$start_marker"
         echo "# 由 install.sh 自动生成，请勿手动修改"
-        echo "export PATH=\"${bin_path}:\$PATH\""
+        printf '%s\n' "$content"
         echo "$end_marker"
     } >> "$shell_rc"
-    echo "[INFO] 已更新 PATH 配置：${shell_rc}"
+    echo "[INFO] 已更新 ${marker} 配置：${shell_rc}"
+}
+
+append_path_config(){
+    local shell_rc="$1"
+    local bin_path="$2"
+    append_rc_block "$shell_rc" "PATH" "export PATH=\"${bin_path}:\$PATH\""
 }
 
 append_source_block(){
     local shell_rc="$1"
-    local start_marker="# HALL_COMMAND_SOURCE_START"
-    local end_marker="# HALL_COMMAND_SOURCE_END"
-
-    touch "$shell_rc"
-
-    # 如果已存在旧的配置块，先移除，避免重复或路径变更后残留旧配置
-    if grep -Fxq "$start_marker" "$shell_rc" 2>/dev/null; then
-        local tmp_file
-        tmp_file=$(mktemp)
-        awk "/^${start_marker}$/{skip=1; next} /^${end_marker}$/{skip=0; next} !skip" "$shell_rc" > "$tmp_file"
-        mv "$tmp_file" "$shell_rc"
-        rm -f "$tmp_file"
-    fi
-
-    cat <<'EOF' >> "$shell_rc"
-
-# HALL_COMMAND_SOURCE_START
-# 由 install.sh 自动生成，请勿手动修改
+    local content
+    content=$(cat <<'EOF'
 if [ -d "$HOME/.hall-command/source" ]; then
   while IFS= read -r FILE; do
     if [ -f "$FILE" ]; then
@@ -257,9 +248,9 @@ if [ -d "$HOME/.hall-command/source" ]; then
     fi
   done < <(find "$HOME/.hall-command/source" -name '*.sh' -print | sort)
 fi
-# HALL_COMMAND_SOURCE_END
 EOF
-    echo "[INFO] 已更新 source 配置：${shell_rc}"
+)
+    append_rc_block "$shell_rc" "SOURCE" "$content"
 }
 
 install_done() {
