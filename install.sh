@@ -5,13 +5,13 @@ set -o pipefail
 
 HALL_COMMAND_NAME="hall-command"
 
-# 允许通过环境变量覆盖源码目录
-# 如果 install.sh 位于一个 hall-command 仓库内，优先使用当前仓库
+# 如果 install.sh 位于一个 hall-command 仓库内，优先使用当前仓库作为源码目录
 script_dir="$(cd -P -- "$(dirname -- "$0")" && pwd)"
-if [ -z "${HALL_COMMAND_GIT_DIR:-}" ] && [ -f "$script_dir/install.sh" ] && [ -d "$script_dir/command" ] && [ -d "$script_dir/source" ]; then
+if [ -f "$script_dir/install.sh" ] && [ -d "$script_dir/command" ] && [ -d "$script_dir/source" ]; then
     HALL_COMMAND_GIT_DIR="$script_dir"
+else
+    HALL_COMMAND_GIT_DIR="${HOME}/.cache/hall-command/src"
 fi
-HALL_COMMAND_GIT_DIR="${HALL_COMMAND_GIT_DIR:-${HOME}/.cache/hall-command/src}"
 HALL_COMMAND_INSTALL_ROOT_PATH="${HOME}/.${HALL_COMMAND_NAME}"
 
 # 跨平台 realpath 兼容实现

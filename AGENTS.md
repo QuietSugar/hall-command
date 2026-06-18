@@ -31,10 +31,10 @@ hall-command 通过 `install.sh` 安装到 `~/.hall-command/`，并将 `command/
 ## 配置
 
 - 项目版本号统一维护在 `VERSION` 文件中，release workflow 和 install 脚本应优先从此文件读取。
+- 源码目录由 `install.sh` 自动决定：若 install.sh 位于仓库内则使用当前目录，否则默认下载到 `~/.cache/hall-command/src`。
 - 配置文件位于 `~/.hall-command/env`，格式为 `key=value`。
 - 示例配置见 `example.env`。
 - 关键环境变量：
-  - `HALL_COMMAND_GIT_DIR`：本地源码目录，默认 `~/.cache/hall-command/src`。
   - `HALL_GIT_REPO_PATH`：git 项目根目录，默认 `~/git-repo`。
   - `HALL_LOG_LEVEL`：日志级别，可选 DEBUG/INFO/SUCCESS/WARNING/ERROR。
 

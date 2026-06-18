@@ -1,114 +1,139 @@
 #!/bin/bash
-
 # ====================================================
-# ====================================================
-
-# ====================================================
-#   寻找目录下所有带 .git的目录,
-#	并且检查是否有未提交文件
-#	-a 打印CLEAN
-#	-d DEBUG调试
-#	-t 目标目录
+#   检查目标目录下所有 Git 仓库的本地状态
+#   用于判断本地项目是否可以安全删除
 #
+#   用法: gitcheck [-a] [-d] [-q] [-r] [-t <目标目录>]
+#     -a  同时打印 CLEAN 的项目
+#     -d  调试模式
+#     -q  安静模式，不打印配置和汇总信息
+#     -r  开启远程状态检测：未推送 / 无上游分支 / 无远程
+#     -t  指定目标目录，默认当前目录
+#
+#   退出码：发现 dirty 仓库时返回 1，否则返回 0
 # ====================================================
-
-# 是否打印CLEAN的项目
-PRINT_CLEAN=false
-IS_DEBUG=false
-# 目标项目目录 默认为当前目录
-TARGET_CHECK_DIR=$(pwd)
-
 
 # shellcheck disable=SC1091
 # shellcheck source=lib/init.sh
 . "$(dirname "$0")/lib/init.sh"
 
-function lm_traverse_dir() {
-  if [ "$IS_DEBUG" = true ]; then
-    log_info "[ DEBUG 当前目录 ]$(realpath_compat .)"
-  fi
-	# 判断.git文件是否存在,如果存在,表示当前目录是一个git仓库
-	if [ -d ".git" ]; then
-		local this_repo_relative_path="${PWD#"$TARGET_CHECK_DIR"}"
-		local this_repo_status=''
-		if [ -n "$(git status -s)" ]; then
-		  this_repo_status+="[未提交$(trim "$(git status -s | wc -l)")]"
-		fi
-		if [ -n "$(git remote -v)" ]; then
-		  # 判断当前分支是否有远程跟踪分支
-      if git rev-parse --abbrev-ref 'HEAD@{upstream}' >/dev/null 2>&1; then
-          # 判断是否有未推送
-          if [ -n "$(git cherry -v)" ]; then
-            this_repo_status+="[未推送$(git cherry -v | wc -l)]"
-          fi
-      else
-          this_repo_status+="[无远程跟踪分支]"
-      fi
-
-
-			# 获取stash数量
-			local stash_count
-			stash_count=$(git stash list | wc -l | tr -d ' ')
-
-			# 判断并输出结果
-			if [ "$stash_count" -ne 0 ]; then
-			    this_repo_status+="[储藏${stash_count}]"
-			fi
-		else
-		  this_repo_status+="[无远程]"
-		fi
-    if [ -n "$this_repo_status" ]; then # 输出结果
-			log_error "[ DIRTY ]$this_repo_status ${TARGET_CHECK_DIR}${this_repo_relative_path}"
-		else
-      if [ "$PRINT_CLEAN" = true ]; then
-        log_info "[ CLEAN ]${this_repo_relative_path}"
-      fi
-    fi
-	else
-		# 当前目录不是一个git仓库文件夹,遍历进入处理
-		for file in .* *; do
-			# 跳过 . 和 ..
-			[ "$file" = "." ] || [ "$file" = ".." ] && continue
-			# 判断是否是目录
-			if [ -d "$file" ]; then
-				# 进入当前目录并递归处理，失败则跳过
-				pushd "$file" >/dev/null 2>&1 || continue
-				lm_traverse_dir "$file" #遍历子目录
-				popd >/dev/null 2>&1 || return
-			fi
-		done
-	fi
+usage() {
+    cat <<EOF
+用法: $(basename "$0") [-a] [-d] [-q] [-r] [-t <目标目录>]
+  -a  同时打印 CLEAN 的项目
+  -d  调试模式
+  -q  安静模式：不打印配置和汇总信息
+  -r  开启远程状态检测：未推送 / 无上游分支 / 无远程
+  -t  指定目标目录（默认当前目录）
+EOF
 }
 
-while getopts "adt:" opt; do
-  case $opt in
-    a)
-      PRINT_CLEAN=true
-      echo "PRINT_CLEAN 设置为 true"
-      ;;
-    t)
-      TARGET_CHECK_DIR=$(realpath_compat "$OPTARG")
-      echo "TARGET_CHECK_DIR 设置为: $TARGET_CHECK_DIR"
-      ;;
-    d)
-      IS_DEBUG=true
-      ;;
-    \?)
-      echo "无效选项: -$OPTARG" >&2
-      exit 1
-      ;;
-    :)
-      echo "选项 -$OPTARG 需要参数" >&2
-      exit 1
-      ;;
-  esac
+print_clean=false
+is_debug=false
+quiet=false
+check_remote=false
+target_dir=$(pwd)
+
+while getopts "adt:qrh" opt; do
+    case $opt in
+        a) print_clean=true ;;
+        d) is_debug=true ;;
+        q) quiet=true ;;
+        r) check_remote=true ;;
+        t) target_dir=$(realpath_compat "$OPTARG") ;;
+        h) usage; exit 0 ;;
+        \?) usage >&2; exit 1 ;;
+    esac
 done
+shift $((OPTIND - 1))
 
-echo "PRINT_CLEAN: $PRINT_CLEAN"
-echo "辅助设置 export TARGET_CHECK_DIR=${TARGET_CHECK_DIR}"
+# 也支持直接传入目标目录作为位置参数
+if [ $# -gt 0 ]; then
+    target_dir=$(realpath_compat "$1")
+fi
 
-# 执行命令 如果需要接收参数,那就执行 lm_traverse_dir $1
-log_info "此次检查当前目录: ${TARGET_CHECK_DIR}"
-cd "$TARGET_CHECK_DIR" || exit 1
-lm_traverse_dir "$TARGET_CHECK_DIR"
+if [ ! -d "$target_dir" ]; then
+    log_error "目录不存在: $target_dir"
+    exit 1
+fi
 
+if [ "$quiet" != true ]; then
+    log_info "此次检查目录: $target_dir"
+fi
+
+if [ "$is_debug" = true ]; then
+    log_info "PRINT_CLEAN: $print_clean, CHECK_REMOTE: $check_remote"
+fi
+
+dirty_count=0
+clean_count=0
+exit_status=0
+
+check_repo() {
+    local git_dir="$1"
+    local repo_dir="${git_dir%/.git}"
+    local relative_path="${repo_dir#"$target_dir"}"
+    [ -z "$relative_path" ] && relative_path="/"
+
+    local status=""
+    local branch
+    branch=$(git -C "$repo_dir" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "?")
+
+    # 未提交文件（包含 staged / unstaged / untracked）
+    local unstaged
+    unstaged=$(git -C "$repo_dir" status --short 2>/dev/null | wc -l | tr -d ' ')
+    if [ "$unstaged" -ne 0 ]; then
+        status+="[未提交${unstaged}]"
+    fi
+
+    # stash 数量
+    local stash_count
+    stash_count=$(git -C "$repo_dir" stash list 2>/dev/null | wc -l | tr -d ' ')
+    if [ "$stash_count" -ne 0 ]; then
+        status+="[储藏${stash_count}]"
+    fi
+
+    # 远程状态检测（默认不开启，避免与远程交互或依赖过时信息）
+    if [ "$check_remote" = true ]; then
+        local upstream
+        if upstream=$(git -C "$repo_dir" rev-parse --abbrev-ref 'HEAD@{upstream}' 2>/dev/null); then
+            local ahead
+            ahead=$(git -C "$repo_dir" rev-list --count HEAD..."$upstream" --left-only 2>/dev/null | tr -d ' ')
+            [ "$ahead" -ne 0 ] && status+="[未推送${ahead}]"
+        elif [ -n "$(git -C "$repo_dir" remote -v 2>/dev/null)" ]; then
+            status+="[无上游分支]"
+        else
+            status+="[无远程]"
+        fi
+    fi
+
+    if [ -n "$status" ]; then
+        log_warning "[ DIRTY ][${branch}]$status ${repo_dir}"
+        exit_status=1
+        dirty_count=$((dirty_count + 1))
+    elif [ "$print_clean" = true ]; then
+        log_info "[ CLEAN ][${branch}] ${relative_path}"
+        clean_count=$((clean_count + 1))
+    fi
+}
+
+# 查找所有 .git 目录
+repo_count=0
+while IFS= read -r -d '' git_dir; do
+    repo_count=$((repo_count + 1))
+    if [ "$is_debug" = true ]; then
+        log_info "[ DEBUG 仓库 ] $git_dir"
+    fi
+    check_repo "$git_dir"
+done < <(find "$target_dir" -type d -name ".git" -print0 2>/dev/null)
+
+if [ "$repo_count" -eq 0 ]; then
+    log_info "未找到 Git 仓库"
+    exit 0
+fi
+
+if [ "$quiet" != true ]; then
+    log_info "检查完成：dirty=${dirty_count}, clean=${clean_count}"
+fi
+
+exit "$exit_status"

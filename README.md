@@ -32,20 +32,13 @@ cd /path/to/hall-command
 bash install.sh
 ```
 
-> 只有当项目位于默认路径 `~/.cache/hall-command/src` 时，才不需要额外配置。
+> `install.sh` 会自动检测：如果它位于一个 hall-command 仓库内，会优先使用当前仓库作为源码目录；否则会下载远程 release 到默认路径 `~/.cache/hall-command/src`。
 
-如果 clone 到了其他位置，通过环境变量指定仓库路径：
+如果 clone 到了其他位置，进入项目目录后执行：
 
 ```bash
 cd /path/to/hall-command
-HALL_COMMAND_GIT_DIR="$(pwd)" bash install.sh
-```
-
-也可以手动指定本地仓库路径：
-
-```bash
-HALL_COMMAND_GIT_DIR=/path/to/hall-command \
-bash /path/to/hall-command/install.sh
+bash install.sh
 ```
 
 # 安装后说明
@@ -58,7 +51,7 @@ bash /path/to/hall-command/install.sh
 4. 自动将 `~/.hall-command/command` 加入 shell 的 PATH：
    - Windows git-bash：`~/.bash_profile`、`~/.bashrc`
    - Linux/macOS：`~/.zshrc`、`~/.bashrc`、`~/.profile`
-5. 如果发布时附带 `.sha256` 校验文件，下载后会自动校验
+5. 如果 release 中附带 `checksums.txt`，下载后会自动校验
 
 安装完成后，重新加载配置文件或重启终端即可使用：
 
@@ -69,6 +62,16 @@ source ~/.bash_profile
 # 或（zsh）
 source ~/.zshrc
 ```
+
+# 环境变量
+
+| 变量名 | 作用 | 默认值 |
+|--------|------|--------|
+| `HALL_GIT_REPO_PATH` | `gitclone` / `gitarc` 使用的本地 Git 项目根目录 | `~/git-repo` |
+| `HALL_LOG_LEVEL` | 日志输出级别：`DEBUG` / `INFO` / `SUCCESS` / `WARNING` / `ERROR` | `INFO` |
+| `PROXY_ADDR` | 代理地址（可在 `~/.hall-command/env` 中配置） | 空 |
+
+配置文件示例见 `example.env`。
 
 # 更新
 
