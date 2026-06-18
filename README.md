@@ -63,6 +63,39 @@ source ~/.bash_profile
 source ~/.zshrc
 ```
 
+# 常用命令
+
+## 查看版本
+
+```bash
+hversion
+```
+
+输出示例：
+
+```text
+hall-command 1.0.7 abc1234   # 从干净的 git 仓库安装
+hall-command 1.0.7-dev def56 # 从本地 git 仓库安装，且安装时存在未提交修改
+hall-command 1.0.7-release   # 从 release 包（curl/wget）安装
+```
+
+# Git Hooks
+
+项目提供了 `.githooks/post-commit`，用于在提交后根据 `VERSION` 文件自动创建对应 tag：
+
+```bash
+# 启用 hooks（只需执行一次）
+git config core.hooksPath .githooks
+```
+
+规则：
+
+- 读取 `VERSION` 文件内容作为 tag 名称
+- 如果该 tag 已存在，则跳过
+- 如果 `VERSION` 文件为空或不存在，则跳过
+
+> 注意：`VERSION` 文件的内容需要与要创建的 tag 名称保持一致。
+
 # 环境变量
 
 | 变量名 | 作用 | 默认值 |

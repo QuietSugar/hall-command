@@ -72,8 +72,8 @@ exit_status=0
 
 print_header() {
     if [ "$header_printed" = false ]; then
-        printf '%b%-8s%b  %-12s  %-40s  %s\n' \
-            "$LOG_INFO_COLOR" "STATUS" "$LOG_DEFAULT_COLOR" "BRANCH" "DETAILS" "PATH"
+        printf '%b%-8s%b  %-12s  %s\n' \
+            "$LOG_INFO_COLOR" "STATUS" "$LOG_DEFAULT_COLOR" "BRANCH" "PATH"
         header_printed=true
     fi
 }
@@ -82,11 +82,12 @@ check_repo() {
     local git_dir="$1"
     local repo_dir="${git_dir%/.git}"
     local relative_path="${repo_dir#"$target_dir"}"
-    [ -z "$relative_path" ] && relative_path="/"
+    relative_path="${relative_path#/}"
+    [ -z "$relative_path" ] && relative_path="."
 
     local status=""
     local branch
-    branch=$(git -C "$repo_dir" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "?")
+    branch=$(git -C "$repo_dir" rev-parse --abbrev-ref HEAD 2>/dev/null) || branch="?"
 
     # 未提交文件（包含 staged / unstaged / untracked）
     local unstaged
@@ -118,14 +119,15 @@ check_repo() {
 
     if [ -n "$status" ]; then
         print_header
-        printf '%b%-8s%b  %-12s  %-40s  %s\n' \
-            "$LOG_WARN_COLOR" "[DIRTY]" "$LOG_DEFAULT_COLOR" "[$branch]" "$status" "$relative_path"
+        printf '%b%-8s%b  %-12s  %s\n' \
+            "$LOG_WARN_COLOR" "[DIRTY]" "$LOG_DEFAULT_COLOR" "[$branch]" "$relative_path"
+        printf '         %s\n' "$status"
         exit_status=1
         dirty_count=$((dirty_count + 1))
     elif [ "$print_clean" = true ]; then
         print_header
-        printf '%b%-8s%b  %-12s  %-40s  %s\n' \
-            "$LOG_SUCCESS_COLOR" "[CLEAN]" "$LOG_DEFAULT_COLOR" "[$branch]" "[-]" "$relative_path"
+        printf '%b%-8s%b  %-12s  %s\n' \
+            "$LOG_SUCCESS_COLOR" "[CLEAN]" "$LOG_DEFAULT_COLOR" "[$branch]" "$relative_path"
         clean_count=$((clean_count + 1))
     fi
 }

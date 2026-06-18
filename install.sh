@@ -5,14 +5,27 @@ set -o pipefail
 
 HALL_COMMAND_NAME="hall-command"
 
+# 在 Windows 的 git-bash/MSYS/Cygwin 中，$HOME 可能是 /home/hall 或 /cygdrive/c/cygwin64/home/hall
+# 而不是 Windows 真正的用户目录 C:\Users\<user>。
+# 因此 Windows 下优先使用 USERPROFILE，确保安装到 Windows 用户目录。
+get_user_home() {
+    if [ "Windows_NT" = "${OS:-}" ] && [ -n "${USERPROFILE:-}" ]; then
+        cygpath -u "$USERPROFILE"
+    else
+        printf '%s' "$HOME"
+    fi
+}
+
+HALL_COMMAND_HOME=$(get_user_home)
+
 # 如果 install.sh 位于一个 hall-command 仓库内，优先使用当前仓库作为源码目录
 script_dir="$(cd -P -- "$(dirname -- "$0")" && pwd)"
 if [ -f "$script_dir/install.sh" ] && [ -d "$script_dir/command" ] && [ -d "$script_dir/source" ]; then
     HALL_COMMAND_GIT_DIR="$script_dir"
 else
-    HALL_COMMAND_GIT_DIR="${HOME}/.cache/hall-command/src"
+    HALL_COMMAND_GIT_DIR="${HALL_COMMAND_HOME}/.cache/hall-command/src"
 fi
-HALL_COMMAND_INSTALL_ROOT_PATH="${HOME}/.${HALL_COMMAND_NAME}"
+HALL_COMMAND_INSTALL_ROOT_PATH="${HALL_COMMAND_HOME}/.${HALL_COMMAND_NAME}"
 
 # 跨平台 realpath 兼容实现
 # install.sh 需要自包含，不能依赖 command/lib/tool.sh（网络安装时该文件可能还不存在）
@@ -174,6 +187,27 @@ install_from_git_dir() {
     cp -r "${HALL_COMMAND_GIT_DIR}/command" "${HALL_COMMAND_INSTALL_ROOT_PATH}/"
     cp -r "${HALL_COMMAND_GIT_DIR}/source" "${HALL_COMMAND_INSTALL_ROOT_PATH}/"
 
+    # 版本号文件
+    if [ -f "${HALL_COMMAND_GIT_DIR}/VERSION" ]; then
+        cp "${HALL_COMMAND_GIT_DIR}/VERSION" "${HALL_COMMAND_INSTALL_ROOT_PATH}/VERSION"
+    fi
+
+    # 记录安装类型和 commit ID，供 hversion 命令读取
+    if [ -d "${HALL_COMMAND_GIT_DIR}/.git" ]; then
+        local commit_id
+        commit_id=$(git -C "${HALL_COMMAND_GIT_DIR}" rev-parse --short HEAD 2>/dev/null)
+        if [ -n "$commit_id" ]; then
+            printf '%s\n' "$commit_id" > "${HALL_COMMAND_INSTALL_ROOT_PATH}/.install-commit"
+        fi
+        if git -C "${HALL_COMMAND_GIT_DIR}" status --porcelain 2>/dev/null | grep -q .; then
+            printf 'dev\n' > "${HALL_COMMAND_INSTALL_ROOT_PATH}/.install-type"
+        else
+            printf 'git\n' > "${HALL_COMMAND_INSTALL_ROOT_PATH}/.install-type"
+        fi
+    else
+        printf 'release\n' > "${HALL_COMMAND_INSTALL_ROOT_PATH}/.install-type"
+    fi
+
     # 配置文件不覆盖，仅提醒
     copy_config_or_warn "${HALL_COMMAND_GIT_DIR}/example.env" "${HALL_COMMAND_INSTALL_ROOT_PATH}/example.env"
     copy_config_or_warn "${HALL_COMMAND_GIT_DIR}/example.env" "${HALL_COMMAND_INSTALL_ROOT_PATH}/env"
@@ -234,7 +268,16 @@ append_rc_block(){
 append_path_config(){
     local shell_rc="$1"
     local bin_path="$2"
-    append_rc_block "$shell_rc" "PATH" "export PATH=\"${bin_path}:\$PATH\""
+    local home_relative_path
+
+    # 安装目录通常位于 HALL_COMMAND_HOME 下，生成相对于 $HOME 的 PATH
+    # 如果不在（例如用户自定义路径），则回退到绝对路径
+    if [ "${bin_path#${HALL_COMMAND_HOME}/}" != "$bin_path" ]; then
+        home_relative_path="${bin_path#${HALL_COMMAND_HOME}/}"
+        append_rc_block "$shell_rc" "PATH" "export PATH=\"\$HOME/${home_relative_path}:\$PATH\""
+    else
+        append_rc_block "$shell_rc" "PATH" "export PATH=\"${bin_path}:\$PATH\""
+    fi
 }
 
 append_source_block(){
@@ -260,17 +303,17 @@ install_done() {
         local win_bin_path
         win_bin_path=$(cygpath -w "$bin_path")
         echo "[INFO] Windows 安装路径：${win_bin_path}"
-        append_path_config "${HOME}/.bash_profile" "$bin_path"
-        append_path_config "${HOME}/.bashrc" "$bin_path"
-        append_source_block "${HOME}/.bash_profile"
-        append_source_block "${HOME}/.bashrc"
+        append_path_config "${HALL_COMMAND_HOME}/.bash_profile" "$bin_path"
+        append_path_config "${HALL_COMMAND_HOME}/.bashrc" "$bin_path"
+        append_source_block "${HALL_COMMAND_HOME}/.bash_profile"
+        append_source_block "${HALL_COMMAND_HOME}/.bashrc"
     else
-        append_path_config "$HOME/.zshrc" "$bin_path"
-        append_path_config "$HOME/.bashrc" "$bin_path"
-        append_path_config "$HOME/.profile" "$bin_path"
-        append_source_block "$HOME/.zshrc"
-        append_source_block "$HOME/.bashrc"
-        append_source_block "$HOME/.profile"
+        append_path_config "$HALL_COMMAND_HOME/.zshrc" "$bin_path"
+        append_path_config "$HALL_COMMAND_HOME/.bashrc" "$bin_path"
+        append_path_config "$HALL_COMMAND_HOME/.profile" "$bin_path"
+        append_source_block "$HALL_COMMAND_HOME/.zshrc"
+        append_source_block "$HALL_COMMAND_HOME/.bashrc"
+        append_source_block "$HALL_COMMAND_HOME/.profile"
     fi
 
     echo "${bin_path}"
