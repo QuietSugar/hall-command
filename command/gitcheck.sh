@@ -50,7 +50,17 @@ shift $((OPTIND - 1))
 
 # 也支持直接传入目标目录作为位置参数
 if [ $# -gt 0 ]; then
-    target_dir=$(realpath_compat "$1")
+    case "$1" in
+        http://*|https://*|git@*|ssh://*|ftp://*|file://*)
+            log_error "gitcheck 用于检查本地 Git 仓库，不支持远程 URL: $1"
+            log_info "用法: $(basename "$0") [-a] [-d] [-q] [-r] [-t <目标目录>]"
+            exit 1
+            ;;
+    esac
+    if ! target_dir=$(realpath_compat "$1"); then
+        log_error "无效目录或路径不存在: $1"
+        exit 1
+    fi
 fi
 
 if [ ! -d "$target_dir" ]; then
@@ -79,8 +89,7 @@ print_header() {
 }
 
 check_repo() {
-    local git_dir="$1"
-    local repo_dir="${git_dir%/.git}"
+    local repo_dir="$1"
     local relative_path="${repo_dir#"$target_dir"}"
     relative_path="${relative_path#/}"
     [ -z "$relative_path" ] && relative_path="."
@@ -132,15 +141,15 @@ check_repo() {
     fi
 }
 
-# 查找所有 .git 目录
+# 查找所有最外层 Git 仓库（发现仓库根目录后不再继续深入其内部）
 repo_count=0
-while IFS= read -r -d '' git_dir; do
+while IFS= read -r -d '' repo_dir; do
     repo_count=$((repo_count + 1))
     if [ "$is_debug" = true ]; then
-        log_info "[ DEBUG 仓库 ] $git_dir"
+        log_info "[ DEBUG 仓库 ] $repo_dir"
     fi
-    check_repo "$git_dir"
-done < <(find "$target_dir" -type d -name ".git" -print0 2>/dev/null)
+    check_repo "$repo_dir"
+done < <(find "$target_dir" -type d -exec test -d '{}/.git' \; -print0 -prune 2>/dev/null)
 
 if [ "$repo_count" -eq 0 ]; then
     log_info "未找到 Git 仓库"
