@@ -60,33 +60,14 @@ source ~/.zshrc
 
 # 常用命令
 
-## 查看版本
+## 已迁移的命令
 
-```bash
-hversion
-```
-
-输出示例：
-
-```text
-hall-command 1.0.7 abc1234   # 从干净的 git 仓库安装
-hall-command 1.0.7-dev def56 # 从本地 git 仓库安装，且安装时存在未提交修改
-hall-command 1.0.7-release   # 从 release 包（curl/wget）安装
-```
-
-## Git 相关命令已迁移
-
-`gitcheck`、`gitarc`、`gitclone` 已用 Go 重写并迁移到
+`gitcheck`、`gitarc`、`gitclone`、`rmempty`（原 `rm_empty_dir`）已用 Go 重写并迁移到
 [hall-kit](https://github.com/QuietSugar/hall-kit)：
 
-- 安装：`go install github.com/QuietSugar/hall-kit/cmd/gitcheck@latest`（`gitarc`、`gitclone` 同理）
+- 安装：`go install github.com/QuietSugar/hall-kit/cmd/gitcheck@latest`（其余命令同理）
 - shell 版本的源码作为参考保留在 hall-kit 的 `legacy/` 目录，不再随本仓库安装
-
-## 删除空目录
-
-```bash
-rm_empty_dir /path/to/dir
-```
+- `hversion` 已删除，版本查询改用 hall-kit 的 `hall --version`
 
 ## 检查历史项目残留
 

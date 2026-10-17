@@ -192,7 +192,7 @@ install_from_git_dir() {
         cp "${HALL_COMMAND_GIT_DIR}/VERSION" "${HALL_COMMAND_INSTALL_ROOT_PATH}/VERSION"
     fi
 
-    # 记录安装类型和 commit ID，供 hversion 命令读取
+    # 记录安装类型和 commit ID，供版本信息查询
     if [ -d "${HALL_COMMAND_GIT_DIR}/.git" ]; then
         local commit_id
         commit_id=$(git -C "${HALL_COMMAND_GIT_DIR}" rev-parse --short HEAD 2>/dev/null)

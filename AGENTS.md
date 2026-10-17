@@ -14,7 +14,7 @@ hall-command 是一个 Bash 命令工具集合，目标是在以下三种环境�
 
 hall-command 通过 `install.sh` 安装到 `~/.hall-command/`，并将 `command/` 目录加入 PATH。
 
-> Git 相关命令（`gitcheck`/`gitclone`/`gitarc`）已迁移到 hall-kit，见 README。
+> `gitcheck`/`gitclone`/`gitarc`/`rm_empty_dir` 已迁移到 hall-kit，`hversion` 已删除，见 README。
 
 ## 代码风格
 
