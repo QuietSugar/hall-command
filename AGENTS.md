@@ -26,7 +26,7 @@ hall-command 通过 `install.sh` 安装到 `~/.hall-command/`，并将 `command/
 ## 目录结构
 
 - `command/`：可执行脚本。
-- `command/lib/`：脚本依赖的库文件（`init.sh`、`slog.sh`、`load_config.sh`）。
+- `command/lib/`：脚本依赖的库文件（`init.sh`、`load_config.sh`）。
 - `source/`：安装后会被自动 source 的 `.sh` 文件。例如 `source/proxy.sh` 提供 `proxy`/`unproxy` 别名和代理设置功能。
 - `tests/`：测试脚本（引用路径需保持正确）。
 
