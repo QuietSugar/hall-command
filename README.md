@@ -96,7 +96,6 @@ make release
 2. 检查是否有未提交的修改
 3. 检查对应 tag 是否已存在
 4. 创建 tag 并推送到远程（只推送当前 tag）
-5. 自动递增 `VERSION` 的 patch 版本号
 
 示例：
 
@@ -105,7 +104,6 @@ echo "1.0.8" > VERSION
 git add VERSION && git commit -m "bump version"
 make release
 # 已发布: 1.0.8
-# VERSION 已递增为: 1.0.9
 ```
 
 > 注意：release 前必须提交 `VERSION` 修改，且工作区需要干净。

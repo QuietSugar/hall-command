@@ -40,12 +40,6 @@ hall-command 通过 `install.sh` 安装到 `~/.hall-command/`，并将 `command/
   - `HALL_GIT_REPO_PATH`：hall-kit 的 `gitclone` / `gitarc` 使用的 git 项目根目录，默认 `~/git-repo`。
   - `HALL_LOG_LEVEL`：日志级别，可选 DEBUG/INFO/SUCCESS/WARNING/ERROR。
 
-## 测试
-
-- 统一入口：`bash tests/run.sh`，会执行全量 `bash -n` 语法检查。
-- 也可手动运行 `tests/sloggi.sh` 验证日志组件。
-- 修改后建议至少执行 `bash tests/run.sh`。
-
 ## 提交规范
 
 - 提交信息使用中文或英文，简要说明修改内容。

@@ -18,4 +18,3 @@ release:
 	git tag "$(VERSION)"
 	git push origin "$(VERSION)"
 	@echo "已发布: $(VERSION)"
-	@bash scripts/bump-version.sh
