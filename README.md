@@ -69,12 +69,6 @@ source ~/.zshrc
 - shell 版本的源码作为参考保留在 hall-kit 的 `legacy/` 目录，不再随本仓库安装
 - `hversion` 已删除，版本查询改用 hall-kit 的 `hall --version`
 
-## 检查历史项目残留
-
-```bash
-check
-```
-
 # 更新
 
 `install.sh` 会根据 `~/.hall-command` 目录是否存在自动判断是**安装**还是**更新**：
