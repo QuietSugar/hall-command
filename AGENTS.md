@@ -14,6 +14,8 @@ hall-command 是一个 Bash 命令工具集合，目标是在以下三种环境�
 
 hall-command 通过 `install.sh` 安装到 `~/.hall-command/`，并将 `command/` 目录加入 PATH。
 
+> Git 相关命令（`gitcheck`/`gitclone`/`gitarc`）已迁移到 hall-kit，见 README。
+
 ## 代码风格
 
 - 脚本统一使用 `#!/bin/bash`，库文件兼容 POSIX 的可保留 `#!/bin/sh`。
@@ -24,7 +26,7 @@ hall-command 通过 `install.sh` 安装到 `~/.hall-command/`，并将 `command/
 ## 目录结构
 
 - `command/`：可执行脚本。
-- `command/lib/`：脚本依赖的库文件（`init.sh`、`slog.sh`、`tool.sh`、`git_tool.sh`、`load_config.sh`）。
+- `command/lib/`：脚本依赖的库文件（`init.sh`、`slog.sh`、`load_config.sh`）。
 - `source/`：安装后会被自动 source 的 `.sh` 文件。例如 `source/proxy.sh` 提供 `proxy`/`unproxy` 别名和代理设置功能。
 - `tests/`：测试脚本（引用路径需保持正确）。
 
@@ -35,7 +37,7 @@ hall-command 通过 `install.sh` 安装到 `~/.hall-command/`，并将 `command/
 - 配置文件位于 `~/.hall-command/env`，格式为 `key=value`。
 - 示例配置见 `example.env`。
 - 关键环境变量：
-  - `HALL_GIT_REPO_PATH`：git 项目根目录，默认 `~/git-repo`。
+  - `HALL_GIT_REPO_PATH`：hall-kit 的 `gitclone` / `gitarc` 使用的 git 项目根目录，默认 `~/git-repo`。
   - `HALL_LOG_LEVEL`：日志级别，可选 DEBUG/INFO/SUCCESS/WARNING/ERROR。
 
 ## 测试

@@ -74,33 +74,13 @@ hall-command 1.0.7-dev def56 # 从本地 git 仓库安装，且安装时存在�
 hall-command 1.0.7-release   # 从 release 包（curl/wget）安装
 ```
 
-## 检查 Git 仓库状态
+## Git 相关命令已迁移
 
-```bash
-gitcheck -t /path/to/projects
-```
+`gitcheck`、`gitarc`、`gitclone` 已用 Go 重写并迁移到
+[hall-kit](https://github.com/QuietSugar/hall-kit)：
 
-常用选项：
-
-- `-a`：同时打印 CLEAN 的项目
-- `-r`：检查远程状态（未推送 / 无上游分支 / 无远程）
-- `-t <dir>`：指定目标目录
-
-## 批量归档 Git 仓库
-
-```bash
-gitarc /path/to/source
-```
-
-按 `remote.origin.url` 把找到的 `.git` 仓库移动到 `~/git-repo/` 下。
-
-## 封装 git clone
-
-```bash
-gitclone https://github.com/user/repo.git
-```
-
-会按 URL 结构把仓库克隆到 `~/git-repo/` 下。
+- 安装：`go install github.com/QuietSugar/hall-kit/cmd/gitcheck@latest`（`gitarc`、`gitclone` 同理）
+- shell 版本的源码作为参考保留在 hall-kit 的 `legacy/` 目录，不再随本仓库安装
 
 ## 删除空目录
 
@@ -159,7 +139,7 @@ make release
 
 | 变量名 | 作用 | 默认值 |
 |--------|------|--------|
-| `HALL_GIT_REPO_PATH` | `gitclone` / `gitarc` 使用的本地 Git 项目根目录 | `~/git-repo` |
+| `HALL_GIT_REPO_PATH` | hall-kit 的 `gitclone` / `gitarc` 使用的本地 Git 项目根目录 | `~/git-repo` |
 | `PROXY_ADDR` | 代理地址（可在 `~/.hall-command/env` 中配置） | 空 |
 
 配置文件示例见 `example.env`。

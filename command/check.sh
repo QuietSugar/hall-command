@@ -8,9 +8,6 @@
 # shellcheck disable=SC1091
 # shellcheck source=lib/init.sh
 . "$(dirname "$0")/lib/init.sh"
-# shellcheck disable=SC1091
-# shellcheck source=lib/git_tool.sh
-. "$(dirname "$0")/lib/git_tool.sh"
 
 find_some_dir() {
   local key_word="$1"
